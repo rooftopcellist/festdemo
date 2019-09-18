@@ -1,0 +1,20 @@
+---
+el_dependencies:
+  - python-psycopg2
+  - python-setuptools
+  - libselinux-python
+  - setools-libs
+  - yum-utils
+  - sudo
+  - acl
+
+postgresql_packages:
+  - postgresql10-server
+  - postgresql10-contrib
+
+
+pg_conf_dir: '/var/lib/pgsql/10/data'
+pg_conf_location: '{{ pg_conf_dir }}/postgresql.conf'
+pg_hba_location: '{{ pg_conf_dir }}/pg_hba.conf'
+postgres_init_name: 'postgresql-10'
+pg_initdb_command: '/usr/pgsql-10/bin/postgresql10-setup initdb'

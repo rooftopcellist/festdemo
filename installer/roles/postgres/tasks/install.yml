@@ -1,0 +1,18 @@
+---
+- name: Add PGDG yum repository for postgres 
+  command: yum install -y https://download.postgresql.org/pub/repos/yum/11/redhat/rhel-7-x86_64/pgdg-centos11-11-2.noarch.rpm
+  become: true
+
+
+- name: Check for old Postgres data
+  stat:
+    path: "{{ existing_pg_dir }}/PG_VERSION"
+  register: old_pg_version_file
+  
+- name: Install postgres
+  yum:
+    name: "{{ item }}"
+    enablerepo: "{{ ansible_tower_dependency_repo }}"
+    disable_gpg_check: '{{ not gpgcheck | bool }}'
+    state: present
+  with_items: "{{ postgresql_packages }}"
