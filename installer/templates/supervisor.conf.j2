@@ -1,0 +1,5 @@
+[program:{{ project_app_name }}]
+user = gunicorn
+stdout_logfile = /venv/logs/gunicorn_supervisor.log
+redirect_stderr = true
+command = /venv/bin/run_gunicorn.sh
