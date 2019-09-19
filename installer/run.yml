@@ -1,5 +1,4 @@
-- name: Install Postgres
-  hosts: '{{ instance_name }}'
+- hosts: "{{ instance_names|default('all') }}"
   gather_facts: true
   roles:
     - role: '{{ role_name }}'
