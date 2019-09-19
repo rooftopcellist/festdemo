@@ -1,0 +1,6 @@
+---
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - 'default.yml'     # CentOS-7
+      paths: '../vars'

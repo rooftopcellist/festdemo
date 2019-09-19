@@ -1,0 +1,80 @@
+---
+# This playbook deploys the web application (database, web and
+#associated daemons) to a single server.
+
+
+# - name: "Sanity check deployment node(s)"
+#   hosts: all
+#   gather_facts: false
+#   roles:
+#     - role: preflight
+#       tags: preflight
+# 
+#     - role: migrations
+#       tags: migrations
+#       migrations_database: "{{ config_dynamic_database }}"
+#       migrations_pg_database: "{{ pg_database }}"
+
+- name: "Prep installation repos"
+  hosts: all
+  gather_facts: false
+  roles:
+    - role: repos_el
+      # tags: packages
+
+- name: Install Dependencies
+  hosts: all
+  gather_facts: false
+  roles:
+    - role: dependencies
+      # tags: packages
+
+
+- name: "Install postgres database node"
+  hosts: database
+  gather_facts: true
+
+  roles:
+    - role: postgres
+      tags: postgresql_database
+      postgres_allowed_ipv4: "0.0.0.0/0"
+      postgres_allowed_ipv6: "::/0"
+      postgres_username: "{{ pg_username }}"
+      postgres_password: "{{ pg_password }}"
+      postgres_database: "{{ pg_database }}"
+      max_postgres_connections: 1024
+      postgres_shared_memory_size: "{{ (ansible_memtotal_mb*0.1)|int }}"
+      postgres_work_mem: "{{ (ansible_memtotal_mb*0.01)|int }}"
+      postgres_maintenance_work_mem: "{{ (ansible_memtotal_mb*0.04)|int }}"
+
+
+    # - role: firewall
+    #   tags: firewall
+    #   firewalld_http_port: "{{ nginx_http_port }}"
+    #   firewalld_https_port: "{{ nginx_https_port }}"
+
+
+
+
+
+
+    # - role: app_install
+    #   tags: app
+    #   app_install_admin_password: "{{ admin_password }}"
+    #   app_install_database: "{{ config_dynamic_database }}"
+    #   app_install_pg_host: "{{ pg_host }}"
+    #   app_install_pg_port: "{{ pg_port }}"
+    #   app_install_pg_username: "{{ pg_username }}"
+    #   app_install_pg_password: "{{ pg_password }}"
+    #   app_install_pg_database: "{{ pg_database }}"
+    #   app_install_pg_init_name: "{{ postgres_init_name }}"
+    #   app_install_supervisor_init_name: "{{ sup_init_name }}"
+    #   app_install_supervisor_socket_location: "{{ sup_socket_location }}"
+    #   rabbitmq_app_install_host: "{{ cluster_host }}"
+
+    # - role: supervisor
+    #   tags: supervisor
+    #   local_queue: "{{ cluster_host }}"
+    # 
+    # - role: nginx
+    #   tags: nginx

@@ -1,0 +1,9 @@
+---
+centos_dependencies:
+  - python-psycopg2
+  - python-setuptools
+  - libselinux-python
+  - setools-libs
+  - yum-utils
+  - sudo
+  - acl

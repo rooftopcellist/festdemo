@@ -1,0 +1,21 @@
+---
+# Configure appropriate repositories for installation
+
+
+
+- name: Add EPEL
+  yum_repository:
+    name: epel
+    description: EPEL YUM repo
+    baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
+  become: yes
+
+- name: Import PGDG gpg key 
+  shell: rpm --import https://ftp.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-10
+  become: yes
+
+- name: Add PostgreSQL 10 repository
+  yum:
+    name: https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-7-x86_64/pgdg-centos10-10-2.noarch.rpm
+    state: present
+  become: yes

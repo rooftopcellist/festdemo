@@ -2,13 +2,15 @@
 # Tasks for configuring PostgreSQL server.
 
 - name: init postgresql
-  command: '{{ pg_initdb_command }}'
+  command: | 
+    su postgres -c "/usr/pgsql-10/bin/initdb --pgdata=/var/lib/pgsql/10/data"
   args:
     creates: "{{ pg_conf_dir }}/PG_VERSION"
+  become: yes
 
 - name: Make sure PostgreSQL is started
   service:
-    name: '{{ postgres_init_name }}'
+    name: 'postgresql-10'
     state: started
   register: postgresql_start
 

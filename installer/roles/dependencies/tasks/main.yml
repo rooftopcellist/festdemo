@@ -1,0 +1,11 @@
+---
+
+- include: vars.yml
+
+- name: Install CentOS Dependencies
+  yum:
+    name: "{{ item }}"
+    disable_gpg_check: '{{ not gpgcheck | bool }}'
+    state: present
+  become: yes
+  with_items: "{{ centos_dependencies }}"
