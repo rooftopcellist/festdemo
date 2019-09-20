@@ -12,14 +12,16 @@
           - wget
           - zlib-devel
           - tcl
-    - name: Install Sqlite3 # not needed once postgres is hooked up
-      shell: "{{ item }}"
-      with_items:
-        - wget https://www.sqlite.org/src/tarball/sqlite.tar.gz
-        - tar xzf sqlite.tar.gz
-        - cd sqlite && ./configure --prefix=/usr --disable-static CFLAGS="-g"
-        - cd sqlite && make
-        - cd sqlite && make install
+          - postgresql
+          - libpqxx-devel.x86_64
+    # - name: Install Sqlite3 # not needed once postgres is hooked up
+    #   shell: "{{ item }}"
+    #   with_items:
+    #     - wget https://www.sqlite.org/src/tarball/sqlite.tar.gz
+    #     - tar xzf sqlite.tar.gz
+    #     - cd sqlite && ./configure --prefix=/usr --disable-static CFLAGS="-g"
+    #     - cd sqlite && make
+    #     - cd sqlite && make install
     - name: Install Python3
       shell: "{{ item }}"
       with_items:
@@ -32,11 +34,11 @@
   become: yes
   gather_facts: yes
   vars:
-    app_repo: https://github.com/gothinkster/django-realworld-example-app
+    app_repo: https://github.com/ansible/django-realworld-example-app
     app_repo_dir: /django-realworld-example-app
     app_name: conduit
     app_wsgi: conduit.wsgi:application
-    app_settings_module: conduit.settings
+    app_settings_module: conduit.settings_devel
     app_virtualenv_dir: /venv/conduit
     app_virtualenv_python: /usr/local/bin/python3
     app_requirements_file: requirements.txt
@@ -44,9 +46,11 @@
     app_static_dir: /venv/conduit/static/
     app_user: conduit
     app_group: conduit
-    app_db_name: db
-    app_db_user: dbuser
+    app_db_name: conduit
+    app_db_user: admin
     app_db_password: password
+    app_db_host: '127.0.0.1'
+    app_db_port: '5432'
     app_secret_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   tasks:
     - name: Install virtualenv
@@ -84,11 +88,13 @@
         group: "{{ app_group }}"
         state: directory
       changed_when: false
-    - name: Install gunicorn to virtualenv
+    - name: Install gunicorn and postgres to virtualenv
       pip:
         virtualenv: "{{ app_virtualenv_dir }}"
-        name: gunicorn
-    - name: Create log folder
+        name:
+          - gunicorn
+          - psycopg2
+    - name: Create log dir
       file:
         path: "{{ app_virtualenv_dir }}/logs"
         owner: "{{ app_user }}"
@@ -128,6 +134,26 @@
       wait_for:
         path: /var/run/supervisor/supervisor.sock
         timeout: 30
+    - name: Run django management commands
+      environment:
+        DJANGO_SETTINGS_MODULE: "{{ app_settings_module }}"
+        DJANGO_SECRET_KEY: "{{ app_secret_key }}"
+        MEDIA_ROOT: "{{ app_media_dir }}"
+        STATIC_ROOT: "{{ app_static_dir }}"
+        DATABASE_HOST: "{{ app_db_host }}"
+        DATABASE_PORT: "{{ app_db_port }}"
+        DATABASE_NAME: "{{ app_db_name }}"
+        DATABASE_USER: "{{ app_db_user }}"
+        DATABASE_PASSWORD: "{{ app_db_password }}"
+      django_manage:
+        command: collectstatic
+        app_path: "{{ app_repo_dir }}"
+        virtualenv: "{{ app_virtualenv_dir }}"
+        settings: "{{ app_settings_module }}"
+      with_items:
+        - migrate
+        - collectstatic
+      notify: restart application
   handlers:
     - name: restart application
       supervisorctl:
