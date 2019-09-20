@@ -56,13 +56,7 @@
     enabled: yes
   become: yes
 
-- name: check if pg user exists
-  command: >-
-    psql -tAc "SELECT COUNT(u.usename) FROM pg_catalog.pg_user u WHERE u.usename = '{{ postgres_username }}';"
-  become: True
-  become_user: postgres
-  register: pg_user_exists
-  become: yes
+
 
 - name: create the awx postgres user if it does not exist and set the password
   command: >-
@@ -72,7 +66,6 @@
   when:
    - "postgres_username is defined and postgres_username != ''"
    - "postgres_password is defined and postgres_password != ''"
-   - "(pg_user_exists.stdout | int) == 0"
   no_log: False
 
 
