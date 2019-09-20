@@ -29,3 +29,8 @@
     name: https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-7-x86_64/pgdg-centos10-10-2.noarch.rpm
     state: present
   become: yes
+
+- name: Install Postgresql10 devel package 
+  yum:
+    name: postgresql10-devel
+    state: present
