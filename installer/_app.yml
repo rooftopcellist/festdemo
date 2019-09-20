@@ -1,0 +1,135 @@
+- hosts: "{{ instance_names|default('all') }}"
+  become: yes
+  gather_facts: yes
+  tasks:
+    - name: Install system packages
+      yum:
+        name:
+          - python-pip
+          - supervisor
+          - "@Development Tools"
+          - openssl-devel
+          - wget
+          - zlib-devel
+          - tcl
+    - name: Install Sqlite3 # not needed once postgres is hooked up
+      shell: "{{ item }}"
+      with_items:
+        - wget https://www.sqlite.org/src/tarball/sqlite.tar.gz
+        - tar xzf sqlite.tar.gz
+        - cd sqlite && ./configure --prefix=/usr --disable-static CFLAGS="-g"
+        - cd sqlite && make
+        - cd sqlite && make install
+    - name: Install Python3
+      shell: "{{ item }}"
+      with_items:
+        - wget https://www.python.org/ftp/python/3.6.4/Python-3.6.4.tar.xz
+        - tar -xJf Python-3.6.4.tar.xz
+        - cd Python-3.6.4 && ./configure --enable-optimizations
+        - cd Python-3.6.4 && make altinstall
+
+- hosts: "{{ instance_names|default('all') }}"
+  become: yes
+  gather_facts: yes
+  vars:
+    app_repo: https://github.com/gothinkster/django-realworld-example-app
+    app_repo_dir: /django-realworld-example-app
+    app_name: conduit
+    app_wsgi: conduit.wsgi:application
+    app_settings_module: conduit.settings
+    app_virtualenv_dir: /venv/conduit
+    app_virtualenv_python: /usr/local/bin/python3
+    app_requirements_file: requirements.txt
+    app_media_dir: /venv/conduit/media/
+    app_static_dir: /venv/conduit/static/
+    app_user: conduit
+    app_group: conduit
+    app_db_name: db
+    app_db_user: dbuser
+    app_db_password: password
+    app_secret_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  tasks:
+    - name: Install virtualenv
+      pip:
+        name: virtualenv
+        version: 15.1.0
+    - name: Clone repo
+      git:
+        repo: "{{ app_repo }}"
+        dest: "{{ app_repo_dir }}"
+    - name: Create virtualenv
+      pip:
+        virtualenv: "{{ app_virtualenv_dir }}"
+        virtualenv_python: "{{ app_virtualenv_python }}"
+        requirements: "{{ app_repo_dir }}/{{ app_requirements_file }}"
+    - name: Create app user
+      user:
+        name: "{{ app_user }}"
+        state: present
+    - name: Create app group
+      group:
+        name: "{{ app_group }}"
+        system: yes
+        state: present
+    - name: Add app user to group
+      user:
+        name: "{{ app_user }}"
+        group: "{{ app_group }}"
+        state: present
+    - name: Set app file permissions
+      file:
+        path: "{{ app_virtualenv_dir }}"
+        recurse: yes
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        state: directory
+      changed_when: false
+    - name: Install gunicorn to virtualenv
+      pip:
+        virtualenv: "{{ app_virtualenv_dir }}"
+        name: gunicorn
+    - name: Create log folder
+      file:
+        path: "{{ app_virtualenv_dir }}/logs"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: 0774
+        state: directory
+    - name: Set virtualenv postactivate script
+      template:
+        src: virtualenv_postactivate.j2
+        dest: "{{ app_virtualenv_dir }}/bin/postactivate"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: 0640
+        backup: yes
+      notify: restart application
+    - name: Install gunicorn runner
+      template:
+        src: gunicorn_run.j2
+        dest: "{{ app_virtualenv_dir }}/bin/gunicorn_run"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: 0755
+        backup: yes
+    - name: Install supervisor config
+      template:
+        src: supervisor.conf.j2
+        dest: /etc/supervisord.d/{{ app_name }}.ini
+        force: yes
+    - name: Recreate systemd tmp files
+      command: systemd-tmpfiles --create
+    - name: Enable supervisord
+      service:
+        name: supervisord
+        state: started
+        enabled: yes
+    - name: Wait for the supervisor socket
+      wait_for:
+        path: /var/run/supervisor/supervisor.sock
+        timeout: 30
+  handlers:
+    - name: restart application
+      supervisorctl:
+        name: "{{ app_name }}"
+        state: restarted

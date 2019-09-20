@@ -1,6 +1,0 @@
-#!/bin/sh
-. /venv/bin/activate
-. /venv/bin/postactivate
-cd {{ project_directory }}
-test -d /venv/run || mkdir -p /venv/run
-exec gunicorn --name festdemo --workers 3 --max-requests 0 --timeout 30 --user gunicorn --group gunicorn --log-level debug --bind unix:/venv/run/gunicorn.sock {{ project_wsgi_application }}
