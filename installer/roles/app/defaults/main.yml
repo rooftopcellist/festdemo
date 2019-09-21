@@ -1,0 +1,19 @@
+---
+app_repo: https://github.com/ansible/django-realworld-example-app
+app_repo_dir: /django-realworld-example-app
+app_name: conduit
+app_wsgi: conduit.wsgi:application
+app_settings_module: conduit.settings_devel
+app_virtualenv_dir: /venv/conduit
+app_virtualenv_python: /usr/local/bin/python3.6
+app_requirements_file: requirements.txt
+app_media_dir: /venv/conduit/media/
+app_static_dir: /venv/conduit/static/
+app_user: conduit
+app_group: conduit
+app_db_name: conduit
+app_db_user: conduit
+app_db_password: password
+app_db_host: '127.0.0.1'
+app_db_port: '5432'
+app_secret_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

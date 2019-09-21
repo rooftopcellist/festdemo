@@ -1,0 +1,5 @@
+---
+- name: Restart application
+  supervisorctl:
+    name: "{{ app_name }}"
+    state: restarted

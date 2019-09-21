@@ -1,5 +1,4 @@
 ---
-
 - include: vars.yml
 
 - name: Install CentOS Dependencies
@@ -9,3 +8,13 @@
     state: present
   become: yes
   with_items: "{{ centos_dependencies }}"
+
+# TODO: Replace this with a different approach.
+# This is just a quick and dirty way of getting python3 onto the machine that we can use for now.
+- name: Install Python3
+  shell: "{{ item }}"
+  with_items:
+    - wget https://www.python.org/ftp/python/3.6.4/Python-3.6.4.tar.xz
+    - tar -xJf Python-3.6.4.tar.xz
+    - cd Python-3.6.4 && ./configure --enable-optimizations
+    - cd Python-3.6.4 && make altinstall

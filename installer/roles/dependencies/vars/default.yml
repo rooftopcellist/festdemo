@@ -7,3 +7,11 @@ centos_dependencies:
   - yum-utils
   - sudo
   - acl
+  - python-pip
+  - supervisor
+  - "@Development Tools"
+  - openssl-devel
+  - wget
+  - zlib-devel
+  - tcl
+  - libpqxx-devel.x86_64
