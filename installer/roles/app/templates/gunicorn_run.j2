@@ -3,4 +3,4 @@
 . {{ app_virtualenv_dir }}/bin/postactivate
 cd {{ app_repo_dir }}
 test -d {{ app_virtualenv_dir }}/run || mkdir -p {{ app_virtualenv_dir }}/run
-exec gunicorn --name {{ app_name }} --workers 3 --max-requests 0 --timeout 30 --user {{ app_user }} --group {{ app_user }} --log-level debug --bind unix:{{ app_virtualenv_dir }}/run/gunicorn.sock {{ app_wsgi }}
+exec gunicorn --name {{ app_name }} --workers 3 --max-requests 0 --timeout 30 --user {{ app_user }} --group {{ app_user }} --log-level debug --bind unix:{{ app_gunicorn_socket }} {{ app_wsgi }}

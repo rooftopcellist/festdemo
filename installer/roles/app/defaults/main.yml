@@ -6,6 +6,7 @@ app_wsgi: conduit.wsgi:application
 app_settings_module: conduit.settings_devel
 app_virtualenv_dir: /venv/conduit
 app_virtualenv_python: /usr/local/bin/python3.6
+app_gunicorn_socket: '{{ app_virtualenv_dir }}/run/gunicorn.sock'
 app_requirements_file: requirements.txt
 app_media_dir: /venv/conduit/media/
 app_static_dir: /venv/conduit/static/

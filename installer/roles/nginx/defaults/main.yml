@@ -4,6 +4,6 @@ nginx_ssl_dest_dir: /etc/ssl
 nginx_server_name: "{{ inventory_hostname }}"
 nginx_static_dir: /venv/conduit/static/
 nginx_media_dir: /venv/conduit/media/
-nginx_virtualenv_dir: /venv/conduit
+nginx_wsgi_server_socket: /venv/conduit/run/gunicorn.sock
 nginx_access_log_file: /venv/conduit/logs/nginx_access.log
 nginx_error_log_file:  /venv/conduit/logs/nginx_error.log

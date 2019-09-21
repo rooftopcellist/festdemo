@@ -1,5 +1,5 @@
 upstream {{ nginx_app_name }}_wsgi_server {
-  server unix:{{ nginx_virtualenv_dir }}/run/gunicorn.sock fail_timeout=0;
+  server unix:{{ nginx_wsgi_server_socket }} fail_timeout=0;
 }
 
 server {
