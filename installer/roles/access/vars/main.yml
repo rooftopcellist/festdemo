@@ -1,0 +1,7 @@
+---
+authorized_users:
+  - username: jakemcdermott
+    key: https://github.com/jakemcdermott.keys
+  - username: rooftopcellist
+    key: https://github.com/rooftopcellist.keys
+    shell: '/bin/bash'

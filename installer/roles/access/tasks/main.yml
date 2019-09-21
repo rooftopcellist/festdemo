@@ -1,0 +1,49 @@
+
+- name: configure sudoers
+  # copy: src=sudoers dest=/etc/sudoers
+  template:
+    src: 'sudoers.j2'
+    dest: '/etc/sudoers'
+    mode: '0440'
+  when: replace_sudoers|bool
+- name: create/managed authorized users
+  user:
+    name: '{{ item.username }}'
+    password: '{{ item.password|default(omit) }}'
+    groups: 'wheel'
+    append: 'yes'
+    shell: '{{ item.shell|default(omit) }}'
+  with_items: '{{ authorized_users }}'
+  when: ansible_os_family in ['RedHat', 'Suse']
+- name: create/managed authorized users
+  user:
+    name: '{{ item.username }}'
+    groups: 'sudo'
+    append: 'yes'
+    shell: '{{ item.shell }}'
+    password: '{{ item.password|default(omit) }}'
+  with_items: '{{ authorized_users }}'
+  when: ansible_os_family == 'Debian'
+- name: add user keys
+  authorized_key:
+    user: '{{ item.username }}'
+    key: '{{ item.key }}'
+  with_items: '{{ authorized_users }}'
+  register: add_user_keys
+  until: add_user_keys|success
+  retries: 10
+  delay: 15
+- lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^%sudo ALL='
+    line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+  when: ansible_os_family == "Debian"
+- lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^%wheel ALL='
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+  when: ansible_os_family != "Debian"
