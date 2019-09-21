@@ -7,7 +7,7 @@
     - repos_el
 
 - name: Install System Dependencies
-  hosts: all
+  hosts: "{{ instance_names|default('all') }}"
   become: yes
   gather_facts: yes
   roles:
