@@ -56,9 +56,14 @@
     enabled: yes
   become: yes
 
+- name: check if pg user exists
+  command: >-
+    psql -tAc "SELECT COUNT(u.usename) FROM pg_catalog.pg_user u WHERE u.usename = '{{ postgres_username }}';"
+  become: True
+  become_user: postgres
+  register: pg_user_exists
 
-
-- name: create the awx postgres user if it does not exist and set the password
+- name: create the postgres user if it does not exist and set the password
   command: >-
     psql -c "CREATE USER {{ postgres_username }} WITH ENCRYPTED PASSWORD '{{ postgres_password }}';"
   become: True
@@ -66,10 +71,11 @@
   when:
    - "postgres_username is defined and postgres_username != ''"
    - "postgres_password is defined and postgres_password != ''"
+   - "(pg_user_exists.stdout | int) == 0"
   no_log: False
 
 
-- name: set postgres user password again to ensure scram-sha-256 is used (needed for upgrades from 3.5.x and earlier)
+- name: set postgres user password again to ensure scram-sha-256 is used (needed for upgrades from older versions)
   command: |
     psql -c "ALTER ROLE {{ postgres_username }} WITH PASSWORD '{{ postgres_password }}';"
   become: True
