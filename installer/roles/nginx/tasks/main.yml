@@ -14,6 +14,9 @@
     persistent: yes
     state: 'true'
   when: getenforce is success and getenforce.stdout.lower() != "disabled"
+- name: Open up permissions on httpd_t domain
+  shell: semanage permissive -a httpd_t
+  when: getenforce is success and getenforce.stdout.lower() != "disabled"
 - name: Ensure directory exists for certs
   file:
     name: /etc/{{ nginx_app_name }}
