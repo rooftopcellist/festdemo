@@ -8,7 +8,7 @@
         machine_type: '{{ machine_type }}'
         image: '{{ image }}'
         zone: '{{ zone }}'
-        tags: '{{ tags }}'
+        tags: '{{ instance_tags }}'
         disks: '{{ disks | default(omit) }}'
         disk_size: '{{ disk_size | default(omit) }}'
       register: gce_instances
