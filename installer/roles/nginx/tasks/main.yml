@@ -14,7 +14,10 @@
     persistent: yes
     state: 'true'
   when: getenforce is success and getenforce.stdout.lower() != "disabled"
-- shell: mkdir -p /etc/{{ nginx_app_name }}
+- name: Ensure directory exists for certs
+  file:
+    name: /etc/{{ nginx_app_name }}
+    state: directory
 - name: create self signed SSL certificates
   command: openssl req -x509 -nodes -sha256 -days 99999 -newkey rsa:2048 -keyout /etc/{{ nginx_app_name }}/{{ nginx_app_name }}.key -out /etc/{{ nginx_app_name }}/{{ nginx_app_name }}.cert -subj "/CN=localhost"
   args:
@@ -23,7 +26,7 @@
     - restart nginx
 - name: Use Diffie-Hellman group
   command: openssl dhparam -out /etc/ssl/certs/dhparams.pem 2048 creates=/etc/ssl/certs/dhparams.pem
-- name: Copy nginx configuration in place.
+- name: Set nginx configuration
   template:
     src: nginx.conf.j2
     dest: /etc/nginx/conf.d/{{ nginx_app_name }}.conf
@@ -32,6 +35,8 @@
     mode: 0644
   notify:
     - reload nginx
-- name: Ensure Nginx service is started
-  service: name=nginx state=started enabled=yes
-
+- name: Ensure Nginx service is enabled and started
+  service:
+    name: nginx
+    state: started
+    enabled: yes
