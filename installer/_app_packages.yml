@@ -8,13 +8,14 @@
       tags: postgresql_database
       postgres_allowed_ipv4: "0.0.0.0/0"
       postgres_allowed_ipv6: "::/0"
-      postgres_username: "{{ pg_username }}"
-      postgres_password: "{{ pg_password }}"
-      postgres_database: "{{ pg_database }}"
+      postgres_username: conduit
+      postgres_password: password
+      postgres_database: conduit
       max_postgres_connections: 1024
       postgres_shared_memory_size: "{{ (ansible_memtotal_mb*0.1)|int }}"
       postgres_work_mem: "{{ (ansible_memtotal_mb*0.01)|int }}"
       postgres_maintenance_work_mem: "{{ (ansible_memtotal_mb*0.04)|int }}"
+
   tasks:
     - name: Install system packages
       yum:

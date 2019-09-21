@@ -15,7 +15,7 @@
     app_user: conduit
     app_group: conduit
     app_db_name: conduit
-    app_db_user: admin
+    app_db_user: conduit
     app_db_password: password
     app_db_host: '127.0.0.1'
     app_db_port: '5432'
@@ -77,7 +77,7 @@
         group: "{{ app_group }}"
         mode: 0640
         backup: yes
-      notify: restart application
+      notify: Restart application
     - name: Install gunicorn runner
       template:
         src: gunicorn_run.j2
@@ -86,6 +86,7 @@
         group: "{{ app_group }}"
         mode: 0755
         backup: yes
+      notify: Restart application
     - name: Install supervisor config
       template:
         src: supervisor.conf.j2
@@ -93,15 +94,6 @@
         force: yes
     - name: Recreate systemd tmp files
       command: systemd-tmpfiles --create
-    - name: Enable supervisord
-      service:
-        name: supervisord
-        state: started
-        enabled: yes
-    - name: Wait for the supervisor socket
-      wait_for:
-        path: /var/run/supervisor/supervisor.sock
-        timeout: 30
     - name: Run django management commands
       environment:
         DJANGO_SETTINGS_MODULE: "{{ app_settings_module }}"
@@ -114,16 +106,25 @@
         DATABASE_USER: "{{ app_db_user }}"
         DATABASE_PASSWORD: "{{ app_db_password }}"
       django_manage:
-        command: collectstatic
+        command: "{{ item }}"
         app_path: "{{ app_repo_dir }}"
         virtualenv: "{{ app_virtualenv_dir }}"
         settings: "{{ app_settings_module }}"
       with_items:
         - migrate
         - collectstatic
-      notify: restart application
+      notify: Restart application
+    - name: Enable supervisord
+      service:
+        name: supervisord
+        state: started
+        enabled: yes
+    - name: Wait for supervisor socket
+      wait_for:
+        path: /var/run/supervisor/supervisor.sock
+        timeout: 30
   handlers:
-    - name: restart application
+    - name: Restart application
       supervisorctl:
         name: "{{ app_name }}"
         state: restarted

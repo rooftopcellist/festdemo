@@ -1,0 +1,54 @@
+---
+- hosts: "{{ instance_names|default('all') }}"
+  become: yes
+  gather_facts: yes
+  vars:
+    nginx_app_name: conduit
+    nginx_ssl_dest_dir: /etc/ssl
+    nginx_server_name: "{{ inventory_hostname }}"
+    nginx_static_dir: /venv/conduit/static/
+    nginx_media_dir: /venv/conduit/media/
+    nginx_virtualenv_dir: /venv/conduit
+    nginx_access_log_file: /venv/conduit/logs/nginx_access.log
+    nginx_error_log_file:  /venv/conduit/logs/nginx_error.log
+  tasks:
+    - name: Install Nginx
+      yum:
+        name: nginx
+        state: latest
+    - name: Determine if selinux is enabled
+      command: getenforce
+      register: getenforce
+      ignore_errors: true
+      changed_when: false
+    - name: Open up permissions on nginx.
+      seboolean:
+        name: httpd_can_network_connect
+        persistent: yes
+        state: 'true'
+      when: getenforce is success and getenforce.stdout.lower() != "disabled"
+    - shell: mkdir -p /etc/{{ nginx_app_name }}
+    - name: create self signed SSL certificates
+      command: openssl req -x509 -nodes -sha256 -days 99999 -newkey rsa:2048 -keyout /etc/{{ nginx_app_name }}/{{ nginx_app_name }}.key -out /etc/{{ nginx_app_name }}/{{ nginx_app_name }}.cert -subj "/CN=localhost"
+      args:
+        creates: /etc/{{ nginx_app_name }}/{{ nginx_app_name }}.cert
+      notify:
+        - restart nginx
+    - name: Use Diffie-Hellman group
+      command: openssl dhparam -out /etc/ssl/certs/dhparams.pem 2048 creates=/etc/ssl/certs/dhparams.pem
+    - name: Copy nginx configuration in place.
+      template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/conf.d/{{ nginx_app_name }}.conf
+        owner: root
+        group: root
+        mode: 0644
+      notify:
+        - reload nginx
+    - name: Ensure Nginx service is started
+      service: name=nginx state=started enabled=yes
+  handlers:
+    - name: restart nginx
+      service: name=nginx state=restarted enabled=yes
+    - name: reload nginx
+      service: name=nginx state=reloaded
