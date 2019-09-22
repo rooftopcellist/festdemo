@@ -4,7 +4,7 @@ postgres_username: 'demo'
 postgres_database: 'demo'
 postgres_allowed_ipv4: '127.0.0.1/32'
 postgres_allowed_ipv6: '::1/128'
-postgres_password: 'password'
+postgres_password: '{{ postgres_password | mandatory }}'
 #postgres_host: None
 #postgres_port: None
 postgres_exec_vars_only: false

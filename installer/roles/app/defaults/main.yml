@@ -14,7 +14,7 @@ app_user: conduit
 app_group: conduit
 app_db_name: conduit
 app_db_user: conduit
-app_db_password: password
+app_db_password: '{{ app_db_password | mandatory }}'
 app_db_host: '127.0.0.1'
 app_db_port: '5432'
-app_secret_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+app_secret_key: '{{ app_secret_key | mandatory }}'

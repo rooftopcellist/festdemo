@@ -18,6 +18,8 @@
   hosts: "{{ instance_names|default('all') }}"
   become: yes
   gather_facts: yes
+  vars_files:
+    - _vault.yml
   roles:
     - role: postgres
       tags: postgresql_database
@@ -25,7 +27,7 @@
       postgres_allowed_ipv4: "0.0.0.0/0"
       postgres_allowed_ipv6: "::/0"
       postgres_username: conduit
-      postgres_password: password
+      postgres_password: '{{ vault_postgres_password }}'
       postgres_database: conduit
       max_postgres_connections: 1024
       postgres_shared_memory_size: "{{ (ansible_memtotal_mb*0.1)|int }}"
@@ -36,6 +38,8 @@
   hosts: "{{ instance_names|default('all') }}"
   become: yes
   gather_facts: yes
+  vars_files:
+    - _vault.yml
   roles:
     - role: app
       app_repo: https://github.com/ansible/django-realworld-example-app
@@ -53,10 +57,10 @@
       app_group: conduit
       app_db_name: conduit
       app_db_user: conduit
-      app_db_password: password
+      app_db_password: '{{ vault_postgres_password }}'
       app_db_host: '127.0.0.1'
       app_db_port: '5432'
-      app_secret_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      app_secret_key: '{{ vault_app_secret_key }}'
 
 - name: Set up Nginx 
   hosts: "{{ instance_names|default('all') }}"
