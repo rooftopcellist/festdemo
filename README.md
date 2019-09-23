@@ -5,6 +5,7 @@ App deployment demo for Ansiblefest 2019
 > Note: This is purely to demonstate how you could deploy a web app with Ansible and is not quite production-ready.  
 
 In this _basic_ web app deployment, we will use the following roles to stand up a web app:
+
 **Provision Host JT**
 * create host
 * access
