@@ -5,14 +5,11 @@
 127.0.0.1:2222
 
 
-
-
 [all:vars]
 
-## Un-comment to get this to work with my Vagrant environment
-# env=vagrant
+## Un-comment to get this to work in the default Vagrant environment
 # ansible_ssh_user=vagrant
-# ansible_ssh_private_key_file=/home/chadams/vagrant/centos/.vagrant/machines/default/virtualbox/private_key
+# ansible_ssh_private_key_file=~/vagrant/centos/.vagrant/machines/default/virtualbox/private_key
 
 # Database Vars
 pg_username=admin
@@ -20,6 +17,5 @@ pg_password=password
 pg_admin_password=postgrespass
 pg_database=app
 pg_port=5432
-
 
 gpgcheck=0
