@@ -30,7 +30,7 @@
     key: '{{ item.key }}'
   with_items: '{{ authorized_users }}'
   register: add_user_keys
-  until: add_user_keys|success
+  until: add_user_keys is success
   retries: 10
   delay: 15
 - lineinfile:
