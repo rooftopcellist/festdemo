@@ -1,80 +1,77 @@
 ---
-# This playbook deploys the web application (database, web and
-#associated daemons) to a single server.
-
-
-# - name: "Sanity check deployment node(s)"
-#   hosts: all
-#   gather_facts: false
-#   roles:
-#     - role: preflight
-#       tags: preflight
-# 
-#     - role: migrations
-#       tags: migrations
-#       migrations_database: "{{ config_dynamic_database }}"
-#       migrations_pg_database: "{{ pg_database }}"
-
-- name: "Prep installation repos"
-  hosts: all
-  gather_facts: false
+- name: Prepare Installation Repos
+  hosts: "{{ instance_names|default('all') }}"
+  become: yes
+  gather_facts: yes
   roles:
-    - role: repos_el
-      # tags: packages
+    - repos_el
 
-- name: Install Dependencies
-  hosts: all
-  gather_facts: false
+- name: Install System Dependencies
+  hosts: "{{ instance_names|default('all') }}"
+  become: yes
+  gather_facts: yes
   roles:
     - role: dependencies
-      # tags: packages
+      gpgcheck: yes
 
-
-- name: "Install postgres database node"
-  hosts: database
-  gather_facts: true
-
+- name: Set up Database
+  hosts: "{{ instance_names|default('all') }}"
+  become: yes
+  gather_facts: yes
+  vars_files:
+    - _vault.yml
   roles:
     - role: postgres
       tags: postgresql_database
+      gpgcheck: yes
       postgres_allowed_ipv4: "0.0.0.0/0"
       postgres_allowed_ipv6: "::/0"
-      postgres_username: "{{ pg_username }}"
-      postgres_password: "{{ pg_password }}"
-      postgres_database: "{{ pg_database }}"
+      postgres_username: conduit
+      postgres_password: '{{ vault_postgres_password }}'
+      postgres_database: conduit
       max_postgres_connections: 1024
       postgres_shared_memory_size: "{{ (ansible_memtotal_mb*0.1)|int }}"
       postgres_work_mem: "{{ (ansible_memtotal_mb*0.01)|int }}"
       postgres_maintenance_work_mem: "{{ (ansible_memtotal_mb*0.04)|int }}"
 
+- name: Deploy Application
+  hosts: "{{ instance_names|default('all') }}"
+  become: yes
+  gather_facts: yes
+  vars_files:
+    - _vault.yml
+  roles:
+    - role: app
+      app_repo: https://github.com/ansible/django-realworld-example-app
+      app_repo_dir: /django-realworld-example-app
+      app_name: conduit
+      app_wsgi: conduit.wsgi:application
+      app_settings_module: conduit.settings_devel
+      app_virtualenv_dir: /venv/conduit
+      app_virtualenv_python: /usr/local/bin/python3.6
+      app_gunicorn_socket: /venv/conduit/run/gunicorn.sock
+      app_requirements_file: requirements.txt
+      app_media_dir: /venv/conduit/media/
+      app_static_dir: /venv/conduit/static/
+      app_user: conduit
+      app_group: conduit
+      app_db_name: conduit
+      app_db_user: conduit
+      app_db_password: '{{ vault_postgres_password }}'
+      app_db_host: '127.0.0.1'
+      app_db_port: '5432'
+      app_secret_key: '{{ vault_app_secret_key }}'
 
-    # - role: firewall
-    #   tags: firewall
-    #   firewalld_http_port: "{{ nginx_http_port }}"
-    #   firewalld_https_port: "{{ nginx_https_port }}"
-
-
-
-
-
-
-    # - role: app_install
-    #   tags: app
-    #   app_install_admin_password: "{{ admin_password }}"
-    #   app_install_database: "{{ config_dynamic_database }}"
-    #   app_install_pg_host: "{{ pg_host }}"
-    #   app_install_pg_port: "{{ pg_port }}"
-    #   app_install_pg_username: "{{ pg_username }}"
-    #   app_install_pg_password: "{{ pg_password }}"
-    #   app_install_pg_database: "{{ pg_database }}"
-    #   app_install_pg_init_name: "{{ postgres_init_name }}"
-    #   app_install_supervisor_init_name: "{{ sup_init_name }}"
-    #   app_install_supervisor_socket_location: "{{ sup_socket_location }}"
-    #   rabbitmq_app_install_host: "{{ cluster_host }}"
-
-    # - role: supervisor
-    #   tags: supervisor
-    #   local_queue: "{{ cluster_host }}"
-    # 
-    # - role: nginx
-    #   tags: nginx
+- name: Set up Nginx 
+  hosts: "{{ instance_names|default('all') }}"
+  become: yes
+  gather_facts: yes
+  roles:
+    - role: nginx
+      nginx_app_name: conduit
+      nginx_ssl_dest_dir: /etc/ssl
+      nginx_static_dir: /venv/conduit/static/
+      nginx_media_dir: /venv/conduit/media/
+      nginx_wsgi_server_socket: /venv/conduit/run/gunicorn.sock
+      # nginx_access_log_file: /venv/conduit/logs/nginx_access.log
+      # nginx_error_log_file:  /venv/conduit/logs/nginx_error.log
