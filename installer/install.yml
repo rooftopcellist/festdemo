@@ -19,7 +19,7 @@
   become: yes
   gather_facts: yes
   vars_files:
-    - _vault.yml
+    - vault.yml
   roles:
     - role: postgres
       tags: postgresql_database
@@ -39,7 +39,7 @@
   become: yes
   gather_facts: yes
   vars_files:
-    - _vault.yml
+    - vault.yml
   roles:
     - role: app
       app_repo: https://github.com/ansible/django-realworld-example-app
